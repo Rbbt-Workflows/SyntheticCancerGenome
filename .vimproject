@@ -1,0 +1,78 @@
+SyntheticCancerGenome=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.txt *.conf" {
+ workflow.rb
+ bin=bin filter="*"{
+ }
+ lib=lib {
+  scout=scout{
+   entity.rb
+  }
+  synthetic_cancer_genome=synthetic_cancer_genome{
+   misc.rb
+   clonality.rb
+   evolution.rb
+   haploid.rb
+   minify.rb
+   structural_variants.rb
+   tasks=tasks{
+    structural_variants.rb
+    reference.rb
+
+    simulate.rb
+
+    clonality.rb
+
+    bundle.rb
+
+    evolution.rb
+
+    germline.rb
+    minify.rb
+    reference.rb
+    samples.rb
+    somatic.rb
+   }
+  }
+ }
+ data=data filter="*"{
+  example=example{
+   evolution.yaml
+   germline.list
+  }
+ }
+ examples=examples filter="*"{
+  .files=.files{
+   clonal_evolution.yaml
+   germline_mutations
+   minify_sizes
+   reference.fa
+   svs
+  }
+  clonal_genotypes=clonal_genotypes{
+   Example=Example{
+    evolution.yaml
+    germline.list
+   }
+  }
+  clone=clone{
+   Example=Example{
+    SVs.tsv
+    fraction
+    mutations
+    read_length
+    reference
+   }
+  }
+  mini_clonal_tumor=mini_clonal_tumor{
+   Example=Example{
+    evolution.yaml
+    minify_sizes.tsv
+    germline
+    fractions
+   }
+  }
+ }
+
+ test=test {
+  test_helper.rb
+ }
+}

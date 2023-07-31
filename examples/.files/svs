@@ -1,0 +1,3 @@
+#: :filename=/home/mvazque2/.rbbt/var/jobs/HTSBenchmark/population_genotypes/simulated_ed4157bcb69b9efd445fe84341367487.files/clone_5/SVs#:type=:list
+#SV ID	Type	Chromosome	Start	End	Target chromosome	Target start	Target end
+cf46ad30bc8e90d4c9350b39ea433a30	DEL	copy-1_chr1	1	20000			

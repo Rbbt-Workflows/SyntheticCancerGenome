@@ -1,0 +1,24 @@
+---
+- 
+  id: founder
+  fraction: 1
+  mutations:
+    - copy-1_chr1:15:G
+    - copy-2_chr1:15:G
+  SVs:
+    - - DEL
+      - copy-1_chr1
+      - 10
+      - 20
+    - - DUP
+      - copy-2_chr1
+      - 10
+      - 20
+      - copy-2_chr1
+      - 20
+-
+  parent: founder
+  fraction: 1
+  mutations:
+    - copy-1_chr1:30:C
+    - copy-2_chr1:30:C

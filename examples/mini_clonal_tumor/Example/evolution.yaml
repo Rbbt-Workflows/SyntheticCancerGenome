@@ -1,0 +1,44 @@
+---
+- 
+  id: founder
+  mutations:
+    - copy-1_chr1:777000:G
+    - copy-1_chr1:778000:G
+    - copy-1_chr1:779000:T
+    - copy-1_chr1:900000:T
+    - copy-2_chr1:810000:G
+  SVs:
+    - - DEL
+      - copy-1_chr1
+      - 800000
+      - 829000
+-
+  parent: founder
+  mutations:
+    - copy-2_chr1:827578:C
+    - copy-2_chr1:850000:T
+  SVs:
+    - - INS
+      - copy-2_chr1
+      - 800000
+      - 829999
+      - cis
+      - 700000
+    - - INS
+      - copy-2_chr1
+      - 800000
+      - 829999
+      - cis
+      - 700000
+    - - INS
+      - copy-2_chr1
+      - 800000
+      - 829999
+      - cis
+      - 700000
+    - - INS
+      - copy-2_chr1
+      - 800000
+      - 829999
+      - cis
+      - 700000
