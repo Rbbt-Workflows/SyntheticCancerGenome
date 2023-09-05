@@ -109,4 +109,7 @@ module SyntheticCancerGenome
 
   dep :miniref_ploidy
   dep_task :mini_tumor_normal, SyntheticCancerGenome, :tumor_normal, :reference => :miniref_ploidy
+
+  dep :reference_ploidy
+  dep_task :full_tumor_normal, SyntheticCancerGenome, :tumor_normal, :reference => :reference_ploidy
 end

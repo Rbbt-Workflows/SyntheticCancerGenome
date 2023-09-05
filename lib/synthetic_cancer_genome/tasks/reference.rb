@@ -86,4 +86,45 @@ module SyntheticCancerGenome
     CMD.cmd(:bgzip,"-c > #{self.tmp_path}", :in => sout)
     nil
   end
+
+
+  input :organism, :string, "Organism code, no build", "Hsa"
+  input :build, :select, "Organism build", "hg38", :select_options => %w(hg19 b37 hg39 GRCh38 GRCh37)
+  input :haploid_chromosomes, :array, "Chromosomes to not duplicate", %w(M X Y)
+  extension 'fa.gz'
+  task :reference_ploidy => :binary do |organism,build,haploid_chromosomes|
+    reference_path = Rbbt.share.organisms[organism][build]
+    reference_path.produce
+
+    reference = reference_path[build + '.fa.gz']
+
+    haploid_chromosomes = haploid_chromosomes.collect{|c| c.sub('chr', '') }
+    sout = Misc.open_pipe do |sin|
+      TSV.traverse reference, :type => :array do |line|
+        if line =~ />/
+          sin.puts ">copy-1_" + line[1..-1]
+        else
+          sin.puts line
+        end
+      end
+
+      skip = false
+      TSV.traverse reference, :type => :array do |line|
+        if line =~ />/
+          chr = line[1..-1].split(/\s+/).first.sub('chr', '')
+          if haploid_chromosomes.include?(chr)
+            skip = true
+          else
+            skip = false
+          end
+          sin.puts ">copy-2_" + line[1..-1] unless skip
+        else
+          sin.puts line unless skip
+        end
+      end
+    end
+
+    CMD.cmd(:bgzip,"-c > #{self.tmp_path}", :in => sout)
+    nil
+  end
 end
