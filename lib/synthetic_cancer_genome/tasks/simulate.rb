@@ -2,6 +2,15 @@ require_relative 'reference'
 require_relative 'structural_variants'
 module SyntheticCancerGenome
 
+
+  input :germline, :array, "Germline mutations"
+  input :somatic, :array, "Somatic mutations"
+  task :somatic_germline => :array do |germline_mutations,somatic_mutations|
+    germline_mutations = germline_mutations.list if Path === germline_mutations
+    somatic_mutations = somatic_mutations.list if Path === somatic_mutations
+    germline_mutations + somatic_mutations
+  end
+
   dep :somatic_germline
   input :organism, :string, "Organism code"
   input :build, :select, "Organism build", "hg38", :select_options => %w(hg19 b37 hg39 GRCh38 GRCh37)
@@ -22,14 +31,6 @@ module SyntheticCancerGenome
     options[:reference] ||= HTS.helpers[:reference_file].call(build) if build
 
     {inputs: options}
-  end
-
-  input :germline, :array, "Germline mutations"
-  input :somatic, :array, "Somatic mutations"
-  task :somatic_germline => :array do |germline_mutations,somatic_mutations|
-    germline_mutations = germline_mutations.list if Path === germline_mutations
-    somatic_mutations = somatic_mutations.list if Path === somatic_mutations
-    germline_mutations + somatic_mutations
   end
 
   input :reference, :path, "Haploid reference file before SVs", nil, :nofile => true

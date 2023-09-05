@@ -22,7 +22,11 @@ module SyntheticCancerGenome
         value = info[field]
         case value
         when Array 
-          Open.write(dir[field], value * "\n" + "\n")
+          if field == 'SVs'
+            Open.write(dir[field], value.collect{|v| v * ":" } * "\n" + "\n")
+          else
+            Open.write(dir[field], value * "\n" + "\n")
+          end
         when TSV
           Open.write(dir[field], value.to_s)
         end
@@ -37,7 +41,10 @@ module SyntheticCancerGenome
   dep :clone, :SVs => :placeholder, :mutations => :placeholder do |jobname,options,dependencies|
     clonal_genotypes = dependencies.flatten.first
     jobs = []
-    options[:fractions].each_with_index do |fraction,i|
+    fractions = options[:fractions].collect{|f| f.to_f }
+    sum = Misc.sum(fractions)
+    fractions = fractions.collect{|f| f / sum }
+    fractions.each_with_index do |fraction,i|
       clone_dir = clonal_genotypes.file("clone_#{i}")
       clone_options = {:SVs => clone_dir.all_SVs, :mutations => clone_dir.transposed_mutations, :fraction => fraction, :restore_svs => clone_dir.all_SVs}
       clone_name = jobname + "-clone_#{i}"

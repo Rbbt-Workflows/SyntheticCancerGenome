@@ -4,7 +4,6 @@ require 'synthetic_cancer_genome/structural_variants'
 
 module SyntheticCancerGenome
 
-  input :reference, :binary, "Reference file", nil, :nofile => true
   input :organism, :string, "Organism code, no build", "Hsa"
   input :build, :select, "Organism build", "hg38", :select_options => %w(hg19 b37 hg39 GRCh38 GRCh37)
   input :minify_sizes, :tsv, "Sizes of each chromosome's beggining to preserve", nil, :required => true
