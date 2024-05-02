@@ -2,8 +2,6 @@ Misc.add_libdir if __FILE__ == $0
 
 #require 'scout/sources/SyntheticCancerGenome'
 
-Workflow.require_workflow "Genomes1000"
-Workflow.require_workflow "COSMIC"
 Workflow.require_workflow "HTS"
 Workflow.require_workflow "NEATGenReads"
 

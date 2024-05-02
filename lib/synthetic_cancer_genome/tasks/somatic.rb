@@ -1,3 +1,5 @@
+Workflow.require_workflow "COSMIC"
+
 module SyntheticCancerGenome
 
   helper :chromosome_sizes do |reference_code='hg38'|

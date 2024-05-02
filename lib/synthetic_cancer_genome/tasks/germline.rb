@@ -1,3 +1,5 @@
+Workflow.require_workflow "Genomes1000"
+
 module SyntheticCancerGenome
 
   input :build, :select, "Organism build", "hg38", :select_options => %w(hg19 b37 hg39 GRCh38 GRCh37)

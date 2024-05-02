@@ -3,9 +3,6 @@ SyntheticCancerGenome=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.
  bin=bin filter="*"{
  }
  lib=lib {
-  scout=scout{
-   entity.rb
-  }
   synthetic_cancer_genome=synthetic_cancer_genome{
    misc.rb
    clonality.rb
