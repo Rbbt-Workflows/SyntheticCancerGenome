@@ -1,10 +1,9 @@
-require_relative 'misc'
 require_relative 'haploid'
 require_relative 'structural_variants'
 
 module SyntheticCancerGenome
 
-  def self.clonal_genotypes(evolution)
+  def self.clonal_genotypes(evolution, chr_sizes = nil)
 
     ancestry = {}
     evolution.each_with_index do |info,i|
@@ -28,6 +27,55 @@ module SyntheticCancerGenome
       end
     end
 
+    #{{{ Remove SV overlaps and out of bounds
+    original_SVs = TSV.setup({}, :key_field => "SV ID", :fields => ["Type", "Chromosome", "Start", "End", "Target chromosome", "Target start", "Target end"], :type => :list)
+    evolution.each do |info|
+      IndiferentHash.setup(info)
+      next unless info["SVs"]
+      info["SVs"].each_with_index do |values,i|
+        values = SyntheticCancerGenome.haploid_SV(values)
+        id = Misc.digest(values.compact * ":" + ".#{i}")
+        original_SVs[id] = values
+      end
+    end
+
+    original_SVs = original_SVs.select do |k,values|
+      type, chr, start, eend, other_chr, other_start = values
+      padding = chr_sizes[:padding] || 0
+
+      size = chr_sizes.values_at(chr, chr.sub(/copy-\d+_/,''), chr.sub(/copy-\d+_chr/,'')).compact.first
+      next false if size.nil?
+      next false if eend.to_i > size.to_i + padding
+      next true unless other_chr && other_chr != ""
+
+      chr = other_chr
+      size = chr_sizes.values_at(chr, chr.sub(/copy-\d+_/,''), chr.sub(/copy-\d+_chr/,'')).compact.first
+      next false if size.nil?
+      next false if other_start.to_i > size.to_i + padding
+
+      true
+    end if chr_sizes
+
+    clean_SVs = SyntheticCancerGenome.clean_SV_overlaps(original_SVs)
+
+    evolution.each do |info|
+      next unless info["SVs"]
+      new = []
+      info["SVs"].each_with_index do |values,i|
+        values = SyntheticCancerGenome.haploid_SV(values)
+        id = Misc.digest(values.compact * ":" + ".#{i}")
+        if clean_SVs.include?(id)
+          new << values
+        else
+          Log.low "Remove SV #{id}: #{values.inspect}"
+          next
+        end
+      end 
+      info["SVs"] = new
+    end
+    #}}} Remove SV overlaps
+
+
     evolution.each_with_index do |info,i|
       IndiferentHash.setup(info)
       mutations = info["mutations"] || []
@@ -42,8 +90,6 @@ module SyntheticCancerGenome
         svs[id] = values
       end if info["SVs"]
 
-      svs = SyntheticCancerGenome.clean_SV_overlaps(svs)
-
       info["haploid_SVs"] = svs
     end
 
@@ -51,7 +97,7 @@ module SyntheticCancerGenome
       private_SVs = info["haploid_SVs"]
       private_mutations = info["haploid_mutations"]
 
-      parent = ancestry[i].first
+      parent = ancestry[i].last
 
       if parent
         parent_mutations = evolution[parent]["all_mutations"]
@@ -73,7 +119,7 @@ module SyntheticCancerGenome
       private_mutations = info["haploid_mutations"]
       private_SVs = info["haploid_SVs"]
 
-      parent = ancestry[i].first
+      parent = ancestry[i].last
       if parent
         parent_SVs = evolution[parent]["all_SVs"]
 

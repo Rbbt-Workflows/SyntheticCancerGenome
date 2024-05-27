@@ -44,6 +44,7 @@ module SyntheticCancerGenome
   input :fraction, :float, "Clonal fraction", nil, :required => true
   dep_task :clone, NEATGenReads, :NEAT_simulate_DNA, :mutations => :somatic_germline, :organism => nil, :build => nil, 
     :restore_SVs => :SVs, :sample_name => nil, :depth => nil, :haploid_reference => true, :reference => :SV_reference do |id,options|
+
     options[:depth] = (options[:target_depth].to_f * options[:fraction].to_f).ceil
     {inputs: options}
   end

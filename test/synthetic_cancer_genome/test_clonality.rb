@@ -33,11 +33,18 @@ class TestClass < Test::Unit::TestCase
       - 35
       - copy-2_chr1
       - 50
+-
+  parent: 1
+  mutations:
+  SVs:
     EOF
     evolution = YAML.load(evolution_txt)
 
     clonal_genotypes = SyntheticCancerGenome.clonal_genotypes(evolution)
-    iif clonal_genotypes[0].keys
+    assert_include clonal_genotypes.last[:all_mutations], "copy-2_chr1:15:G"
+    assert_include clonal_genotypes.last[:all_mutations], "copy-2_chr1:30:C"
+    assert_include clonal_genotypes.last[:transposed_mutations], "copy-2_chr1:15:G"
+    assert_include clonal_genotypes.last[:transposed_mutations], "copy-2_chr1:26:G"
   end
 end
 

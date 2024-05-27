@@ -3,6 +3,9 @@ Misc.add_libdir if __FILE__ == $0
 #require 'scout/sources/SyntheticCancerGenome'
 
 Workflow.require_workflow "HTS"
+#Workflow.require_workflow "Genomes1000"
+#Workflow.require_workflow "COSMIC"
+#Workflow.require_workflow "HTS"
 Workflow.require_workflow "NEATGenReads"
 
 module SyntheticCancerGenome
@@ -21,6 +24,7 @@ Workflow.main = SyntheticCancerGenome
 
 require 'synthetic_cancer_genome/tasks/clonality.rb'
 require 'synthetic_cancer_genome/tasks/bundle.rb'
+require 'synthetic_cancer_genome/tasks/analyze.rb'
 
 #require 'synthetic_cancer_genome/tasks/reference.rb'
 #require 'synthetic_cancer_genome/tasks/samples.rb'

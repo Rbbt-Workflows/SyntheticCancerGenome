@@ -27,6 +27,8 @@ SyntheticCancerGenome=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.
     reference.rb
     samples.rb
     somatic.rb
+
+    analyze.rb
    }
   }
  }
@@ -65,6 +67,12 @@ SyntheticCancerGenome=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.
     minify_sizes.tsv
     germline
     fractions
+   }
+   SV=SV{
+    evolution.yaml
+    fractions
+    germline
+    minify_sizes.tsv
    }
   }
  }

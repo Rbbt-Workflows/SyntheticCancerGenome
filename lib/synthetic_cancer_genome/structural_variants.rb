@@ -16,7 +16,8 @@ module SyntheticCancerGenome
         if chr
           ranges[chr].each do |start,eend,id|
             fragments[chr] ||= {}
-            fragments[chr][[start, eend, id]] = chr_txt[start-1..eend-1]
+            seq = chr_txt[start-1..eend-1]
+            fragments[chr][[start, eend, id]] = seq
           end if ranges[chr]
         end
         chr = line.split(" ").first[1..-1]
@@ -208,6 +209,7 @@ module SyntheticCancerGenome
   end
 
   def self.SV_regions(svs, copies = {})
+    svs = self.place_SVs(svs)
     collect_fragments = {}
     remove_fragments = {}
     insert_fragments = []
@@ -451,20 +453,30 @@ module SyntheticCancerGenome
     svs_new = svs.annotate({})
     chr_ranges = {}
     svs.sort_by('Start'){|k,s| s.to_f}.each do |key,values|
-      type, chr, start, eend, *rest = values 
+      type, chr, start, eend, new_chr, new_pos, *rest = values 
       start = start.to_i
       eend = eend.to_i
       chr_ranges[chr] ||= []
 
-      if chr_ranges[chr].select{|s,e| e > start }.any?
+      if chr_ranges[chr].select{|s,e| e >= start }.any?
+        next
+      elsif chr_ranges[chr].select{|s,e| e >= start }.any?
         next
       else
-        chr_ranges[chr] << [start,eend] if type == "DEL"
+        chr_ranges[chr] << [start, eend] if type == "DEL"
         svs_new[key] = values
       end
-
     end
-    svs_new
+
+    svs_new.select do |key, values|
+      type, chr, start, eend, new_chr, new_pos, *rest = values 
+
+      if new_chr && chr_ranges[new_chr] && chr_ranges[new_chr].select{|s,e| (s..e).include?(new_pos.to_i)}.any?
+        false
+      else
+        true
+      end
+    end
   end
 
 end

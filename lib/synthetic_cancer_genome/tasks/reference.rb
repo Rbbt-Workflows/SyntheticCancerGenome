@@ -7,12 +7,13 @@ module SyntheticCancerGenome
   input :organism, :string, "Organism code, no build", "Hsa"
   input :build, :select, "Organism build", "hg38", :select_options => %w(hg19 b37 hg39 GRCh38 GRCh37)
   input :minify_sizes, :tsv, "Sizes of each chromosome's beggining to preserve", nil, :required => true
-  input :minify_padding, :integer, "Extra bases to add to reference", 5_000
+  input :minify_padding, :integer, "Extra bases to add to reference", 100_000
   input :minify_vcf, :boolean, "Minimize also the vcfs", false
   extension 'fa.gz'
-  task :miniref => :binary do |reference,organism,build,minify_sizes,minify_padding,minify_vcf|
+  task :miniref => :binary do |organism,build,minify_sizes,minify_padding,minify_vcf|
 
     if minify_sizes
+      minify_sizes = TSV.open(minify_sizes) if String === minify_sizes
       minify_sizes = minify_sizes.to_single if TSV === minify_sizes
 
       minify_sizes[:padding] = minify_padding
