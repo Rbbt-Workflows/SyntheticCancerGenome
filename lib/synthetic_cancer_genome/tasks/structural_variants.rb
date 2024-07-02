@@ -2,7 +2,7 @@ require 'synthetic_cancer_genome/structural_variants'
 
 module SyntheticCancerGenome
   input :reference, :path, "Reference file", nil, :nofile => true
-  input :SVs, :tsv, "SVs to apply to reference"
+  input :SVs, :path, "SVs to apply to reference", nil, :noload => true
   extension 'fa.gz'
   task :SV_reference => :binary do |reference,svs|
     reference = reference.find if Path === reference
@@ -11,7 +11,7 @@ module SyntheticCancerGenome
   end
 
   input :germline, :array, "Germline mutations to transpose", []
-  input :SVs, :tsv, "SVs to apply to reference"
+  input :SVs, :path, "SVs to apply to reference", nil, :noload => true
   task :SV_germline => :array do |germline, svs|
     SyntheticCancerGenome.transpose_mutations(svs, germline).values.flatten
   end

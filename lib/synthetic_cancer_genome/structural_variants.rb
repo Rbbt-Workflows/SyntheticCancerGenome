@@ -312,6 +312,7 @@ module SyntheticCancerGenome
 
   def self.place_SVs(sv_array)
     sv_array = sv_array.tsv if Path === sv_array
+    sv_array = TSV.open(sv_array) if String === sv_array
     sv_array = sv_array.values if TSV === sv_array
 
     svs = TSV.setup({}, :key_field => "SV ID", :fields => ["Type", "Chromosome", "Start", "End", "Target chromosome", "Target start", "Target end"], :type => :list)

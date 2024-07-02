@@ -3,8 +3,8 @@ require_relative 'structural_variants'
 module SyntheticCancerGenome
 
 
-  input :germline, :array, "Germline mutations"
-  input :somatic, :array, "Somatic mutations"
+  input :germline, :array, "Germline mutations", nil, :noload => true
+  input :somatic, :array, "Somatic mutations", nil, :noload => true
   task :somatic_germline => :array do |germline_mutations,somatic_mutations|
     germline_mutations = germline_mutations.list if Path === germline_mutations
     somatic_mutations = somatic_mutations.list if Path === somatic_mutations

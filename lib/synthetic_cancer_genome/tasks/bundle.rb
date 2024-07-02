@@ -31,7 +31,7 @@ module SyntheticCancerGenome
             fraction = fraction.to_f
             clone_step = Step === clone ? clone : Step.new(clone)
 
-            input = clone_step.load.sort[i]
+            input = clone_step.files.select{|f| f.include?(".fq.gz") }.sort.collect{|f| clone_step.file(f) }[i]
 
             skip = nil
             rnd = Random.new 1234
@@ -57,7 +57,8 @@ module SyntheticCancerGenome
     else
       ['tumor_read1.fq.gz', 'tumor_read2.fq.gz'].each_with_index do |filename,i|
         output = file(filename)
-        Open.link clonal_tumor.load.sort[i], output
+        source_file = clonal_tumor.files.select{|f| f.include?(".fq.gz") }.sort.collect{|f| clonal_tumor.file(f) }[i]
+        Open.link source_file, output
       end
     end
 
@@ -101,7 +102,8 @@ module SyntheticCancerGenome
     else
       ['normal_read1.fq.gz', 'normal_read2.fq.gz'].each_with_index do |filename,i|
         output = file(filename)
-        Open.link normal.load.sort[i], output
+        source_file = normal.files.select{|f| f.include?(".fq.gz") }.sort.collect{|f| normal.file(f) }[i]
+        Open.link source_file, output
       end
     end
     Dir.glob(files_dir + "/*")
