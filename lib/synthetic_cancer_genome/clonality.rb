@@ -108,22 +108,23 @@ module SyntheticCancerGenome
         parent_mutations = []
         parent_SVs = nil
         all_SVs = private_SVs
+        transposed_SVs = all_SVs
       end
 
       info["all_mutations"] = parent_mutations + private_mutations
       info["parent_SVs"] = parent_SVs
       info["all_SVs"] = all_SVs
+      info["transposed_SVs"] = transposed_SVs
     end
 
     evolution.each_with_index do |info,i|
       private_mutations = info["haploid_mutations"]
       private_SVs = info["haploid_SVs"]
+      parent_SVs = info["parent_SVs"]
+      transposed_SVs = info["transposed_SVs"]
 
       parent = ancestry[i].last
       if parent
-        parent_SVs = evolution[parent]["all_SVs"]
-
-        transposed_SVs = SyntheticCancerGenome.transpose_SVs(parent_SVs, private_SVs)
 
         transposed_private_mutations_pre = SyntheticCancerGenome.transpose_mutations(parent_SVs, private_mutations).values.collect{|v| choose(v) }
         transposed_private_mutations = SyntheticCancerGenome.transpose_mutations(transposed_SVs, transposed_private_mutations_pre).values.flatten
@@ -143,5 +144,139 @@ module SyntheticCancerGenome
 
       info["transposed_mutations"] = transposed_mutations
     end
+  end
+
+  def self.segments(clonal_genotypes)
+    segments = []
+
+    clonal_genotypes.each_with_index do |info, i|
+      clone_segments = {}
+
+      svs = info[:all_SVs]
+
+      collect_fragments, insert_fragments, remove_fragments, duplications = SyntheticCancerGenome.SV_regions(svs)
+
+      chromosome_alterations = {}
+      insert_fragments.each do |fragment,chr,start,length,inverse|
+        chromosome_alterations[chr] ||= []
+        chromosome_alterations[chr] << [:insert, start, fragment, inverse]
+      end
+
+      remove_fragments.each do |chr, list|
+        chromosome_alterations[chr] ||= []
+        list.each do |start,eend,id|
+          chromosome_alterations[chr] ||= []
+          chromosome_alterations[chr] << [:remove, start, eend]
+        end
+      end
+
+      chromosome_alterations.each do |chr,list|
+        chr_segments = []
+        pos = 1
+        list.sort_by!{|a| a[1] }.each do |type,start,*other|
+          chr_segments << [pos, start-1] * "-" if start > pos
+          case type
+          when :insert
+            fragment, inverse = other
+            if inverse
+              chr_segments << "(" + collect_fragments[fragment].values_at(0,2,1) * "," + ")"
+            else
+              chr_segments << "(" + collect_fragments[fragment] * "," + ")"
+            end
+            pos = start
+          when :remove
+            pos = other.first+1
+          end
+        end
+        chr_segments << [pos, "END"] * "-"
+        clone_segments[chr] = chr_segments
+      end
+
+      alt_shift = {}
+      info[:transposed_mutations].
+        sort_by{|m| m.split(":")[1].to_i }.
+        each do |mutation|
+          chr, pos, alt = mutation.split(":")
+          pos = pos.to_i
+
+          if alt.start_with?("+")
+            clean_alt = alt[1..-1]
+            alt_diff = 1
+          elsif alt.start_with?("-")
+            clean_alt = alt.gsub("-",'')
+            alt_diff = clean_alt.length + 1 - alt.length
+          else
+            clean_alt = alt
+            alt_diff = 0
+          end
+
+          current = clone_segments[chr] ||  [["1", "END"] * "-"]
+          new = []
+          pre_size = 0
+          current.each do |segment|
+            if segment.start_with?("(")
+              source_chr, start, eend = segment[1..-2].split(",")
+            elsif segment.include?("-")
+              start, eend = segment.split("-")
+            else
+              size = segment.length
+            end
+
+            if size.nil?
+              start = start.to_i
+              eend = eend.to_i
+              inverse = eend < start
+              if inverse
+                size = start - eend + 1
+              else
+                size = eend - start + 1
+              end
+            end
+
+            pre_final_size = pre_size - (alt_shift[chr] || 0)
+            if ! ((pos > pre_final_size) && (pos <= pre_final_size + size))
+              new << segment
+            else
+
+              if segment.start_with?("(")
+                offset = pos - (pre_final_size + 1) + alt_shift[chr]
+                raise "One mutations breaks segment boundary #{mutation} #{segment} #{offset}: #{current}" if offset - alt_diff < 0
+
+                if inverse
+                  new << "(" + [source_chr, start, start - offset + 1] * "," + ")" if offset > 0
+                  new << clean_alt
+                  new << "(" + [source_chr, start - offset-1, eend] * "," + ")" if eend <= start - offset - 1
+                else
+                  new << "(" + [source_chr, start, start + offset - 1 + alt_diff] * "," + ")" if offset > 0
+                  new << clean_alt
+                  new << "(" + [source_chr, start + offset+1, eend] * "," + ")" if eend >= start + offset + 1
+                end
+
+              elsif segment.include?("-")
+                offset = pos - pre_final_size - 1
+
+                new << [start, start + offset - 1 + alt_diff] * "-"
+                new << clean_alt
+                new << [start + offset+1, eend] * "-" if eend >= start + offset + 1
+              else
+                offset = pos - pre_final_size - 1
+                new << segment[0..offset-2]
+                new << clean_alt
+                new << segment[offset+1..-2]
+                size = clean_alt.length
+              end
+            end
+            pre_size += size
+          end
+          alt_shift[chr] ||= 0
+          alt_shift[chr] += alt_diff
+          new = new.compact.reject{|s| s.empty? }
+          clone_segments[chr] = new
+        end
+
+      segments << clone_segments
+    end
+
+    segments
   end
 end
