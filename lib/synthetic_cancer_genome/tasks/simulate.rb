@@ -33,10 +33,10 @@ module SyntheticCancerGenome
     {inputs: options}
   end
 
-  input :reference, :path, "Haploid reference file before SVs", nil, :nofile => true
-  input :mutations, :list, "Final mutations, corrected by SVs", nil, :nofile => true
-  input :germline, :array, "Germline mutations before SV correction"
-  input :SVs, :tsv, "SVs to apply to reference"
+  input :reference, :path, "Haploid reference file before SVs", nil, :noload => true
+  input :mutations, :list, "Final mutations, corrected by SVs", nil, :noload => true
+  input :germline, :array, "Germline mutations before SV correction", nil, :noload => true
+  input :SVs, :tsv, "SVs to apply to reference", nil, :noload => true
   dep :SV_reference, :reference => :reference, :SVs => :SVs
   dep :SV_germline, :germline => :germline, :SVs => :SVs
   dep :somatic_germline, :somatic => :mutations, :germline => :SV_germline
