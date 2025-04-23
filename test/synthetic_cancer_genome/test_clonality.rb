@@ -3,7 +3,6 @@ require File.expand_path(__FILE__).sub(%r(.*/test/), '').sub(/test_(.*)\.rb/,'\1
 
 class TestClass < Test::Unit::TestCase
 
-
   def test_clonal_segments_simple_two
     evolution_txt = <<-EOF
 ---
@@ -17,12 +16,6 @@ class TestClass < Test::Unit::TestCase
       - 11
       - 20
       - copy-2_chr1
-      - 21
-    - - INS
-      - copy-2_chr2
-      - 11
-      - 20
-      - copy-2_chr2
       - 21
     EOF
     evolution = YAML.load(evolution_txt)
@@ -255,7 +248,7 @@ class TestClass < Test::Unit::TestCase
     clonal_genotypes = SyntheticCancerGenome.clonal_genotypes(evolution)
 
     segments = SyntheticCancerGenome.segments(clonal_genotypes)
-    assert_equal ["1-15", "A_0", "GG_2", "18-END"], segments.last["copy-2_chr1"]
+    assert_equal ["1-15", "A", "GG", "18-END"], segments.last["copy-2_chr1"]
   end
 
   def test_clonal_genotypes

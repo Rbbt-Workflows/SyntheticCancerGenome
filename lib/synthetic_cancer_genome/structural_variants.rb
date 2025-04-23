@@ -480,4 +480,23 @@ module SyntheticCancerGenome
     end
   end
 
+  def self.import_PCAWG_SVs(type, chr, pos, pos2, tchr = nil, tpos = nil)
+    res = []
+    case type
+    when "DUP"
+      res << ["INS", chr, pos, pos2, tchr, tpos]
+    when "DEL"
+      res << ["DEL", chr, pos, pos2]
+    when "h2hINV"
+      res << ["INV", chr, pos, pos2, chr, pos]
+    when "t2tINV"
+      res <<["INV", chr, pos, pos2, chr, pos2.to_i + 1]
+    when "TRA"
+      res << ["DEL", chr, pos, pos2]
+      if rand < 0.5
+        res << ["INS", chr, pos, pos2, tchr, tpos]
+      end
+    end
+    res
+  end
 end

@@ -47,7 +47,9 @@ module SyntheticCancerGenome
   dep :clone, :SVs => :placeholder, :mutations => :placeholder, :fraction => :placeholder, :restore_svs => :placeholder do |jobname,options,dependencies|
     clonal_genotypes = dependencies.flatten.first
     jobs = []
-    fractions = options[:fractions].collect{|f| f.to_f }
+    fractions = options[:fractions]
+    fractions = fractions.run if Step === fractions
+    fractions = fractions.collect{|f| f.to_f }
     sum = Misc.sum(fractions)
     fractions = fractions.collect{|f| f / sum }
     fractions.each_with_index do |fraction,i|

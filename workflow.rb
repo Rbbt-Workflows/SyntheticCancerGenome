@@ -12,7 +12,6 @@ end
 
 Workflow.main = SyntheticCancerGenome
 
-#require 'synthetic_cancer_genome/tasks/germline.rb'
 #require 'synthetic_cancer_genome/tasks/somatic.rb'
 #require 'synthetic_cancer_genome/tasks/minify.rb'
 
@@ -22,6 +21,7 @@ Workflow.main = SyntheticCancerGenome
 require 'synthetic_cancer_genome/tasks/clonality.rb'
 require 'synthetic_cancer_genome/tasks/bundle.rb'
 require 'synthetic_cancer_genome/tasks/analyze.rb'
+require 'synthetic_cancer_genome/tasks/germline.rb'
 
 #require 'synthetic_cancer_genome/tasks/reference.rb'
 #require 'synthetic_cancer_genome/tasks/samples.rb'
