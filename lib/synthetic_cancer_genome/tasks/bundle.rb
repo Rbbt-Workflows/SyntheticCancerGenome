@@ -3,7 +3,8 @@ require_relative 'clonality'
 
 module SyntheticCancerGenome
 
-  dep :clonal_tumor, :target_depth => 60
+  dep :reference_ploidy
+  dep :clonal_tumor, :target_depth => 60, reference: :reference_ploidy
   dep :normal, :depth => 30 do |jobname,options|
     {:inputs => options, :jobname => jobname + "-normal" }
   end

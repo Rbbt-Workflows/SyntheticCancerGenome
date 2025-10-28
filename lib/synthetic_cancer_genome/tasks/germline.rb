@@ -65,10 +65,9 @@ module SyntheticCancerGenome
       TSV.traverse dependencies.last, type: :array, bar: true do |mutation|
         chr, pos, alt = mutation.split(":")
         chr = "chr" + chr unless chr.start_with?("chr")
-        chr = "copy-1_" + chr
+        chr = "copy-2_" + chr
         sin.puts [chr, pos, alt] * ":"
       end
     end
   end
-
 end

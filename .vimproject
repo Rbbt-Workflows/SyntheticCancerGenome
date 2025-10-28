@@ -6,6 +6,8 @@ SyntheticCancerGenome=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.
   synthetic_cancer_genome=synthetic_cancer_genome{
    misc.rb
    clonality.rb
+   clonality_new.rb
+   clonality_old.rb
    evolution.rb
    haploid.rb
    minify.rb

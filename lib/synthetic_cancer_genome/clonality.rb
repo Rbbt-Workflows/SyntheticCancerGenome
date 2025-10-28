@@ -145,6 +145,78 @@ module SyntheticCancerGenome
       info["transposed_mutations"] = transposed_mutations
     end
   end
+  
+  def self.segment_info(segment)
+    if segment.start_with?("(")
+      source_chr, start, eend = segment[1..-2].split(",")
+    elsif segment.include?("-")
+      start, eend = segment.split("-")
+    else
+      change, _sep, segment_substitues = segment.partition("_") 
+      segment_substitues = segment_substitues.to_i
+      advance = segment_substitues
+      size = change.length
+    end
+
+    if size.nil?
+      start = start.to_i
+      advance = eend == "END" ? 0 : eend.to_i - start.to_i + 1
+      eend = eend == "END" ? Float::INFINITY : eend.to_i
+
+      inverse = eend < start
+      if inverse
+        size = start - eend + 1
+      else
+        size = eend - start + 1
+      end
+    end
+
+    [source_chr, start, eend, inverse, size, advance, change, segment_substitues]
+  end
+  
+  def self.break_segment(segment, mutation, pos, clean_alt, mutation_substitutes, pre_final_size)
+    new = []
+    source_chr, start, eend, inverse, size, advance, change, segment_substitues = segment_info segment
+    if segment.start_with?("(")
+      offset = pos - (pre_final_size + 1)
+      raise "One mutations breaks segment boundary #{mutation} #{segment} #{offset}" if offset < 0
+
+      if ! inverse
+        new << "(" + [source_chr, start, start + offset - mutation_substitutes ] * "," + ")" if offset > 0
+        new << [clean_alt, mutation_substitutes] * "_"
+        new << "(" + [source_chr, start + offset + 1, eend] * "," + ")" if eend >= start + offset + 1
+      else
+        new << "(" + [source_chr, start, start - offset + 1] * "," + ")" if offset > 0
+        new << [clean_alt, mutation_substitutes] * "_"
+        new << "(" + [source_chr, start - offset - mutation_substitutes, eend] * "," + ")" if eend <= start - offset - 1
+      end
+
+    elsif segment.include?("-")
+      offset = pos - pre_final_size - 1
+
+      new << [start, start + offset - mutation_substitutes] * "-" if offset >= mutation_substitutes
+      new << [clean_alt, mutation_substitutes] * "_"
+      if eend == Float::INFINITY
+        new << [start + offset+1, "END"] * "-"
+      else
+        new << [start + offset+1, eend] * "-" if eend >= start + offset + 1
+      end
+    else
+      offset = pos - pre_final_size - 1
+
+      new_change = ""
+      new_change << change[0..offset-2]
+      new_change << clean_alt
+      new_change << change[offset+1..-2]
+
+      segment_substitues += mutation_substitutes - 1
+
+      new << [new_change, segment_substitues] * "_"
+
+    end
+    new
+  end
+
 
   def self.clonal_segments(svs, transposed_mutations)
     clone_segments = {}
@@ -187,8 +259,7 @@ module SyntheticCancerGenome
       clone_segments[chr] = chr_segments
     end
 
-    alt_shift = 0
-    last_pre_size = 0
+    chr_last_hit = {} 
     TSV.traverse transposed_mutations.
       sort_by{|m| m.split(":")[1].to_i }, 
       bar: true do |mutation|
@@ -207,84 +278,32 @@ module SyntheticCancerGenome
         end
 
         current = clone_segments[chr] ||  [["1", "END"] * "-"]
-        new = []
-        pre_size = 0
-        alt_shift = 0
-        current.each do |segment|
-          advance = 0
 
-          if segment.start_with?("(")
-            source_chr, start, eend = segment[1..-2].split(",")
-          elsif segment.include?("-")
-            start, eend = segment.split("-")
-          else
-            change, _sep, segment_substitues = segment.partition("_") 
-            segment_substitues = segment_substitues.to_i
-            advance = segment_substitues
-            size = change.length
-          end
-
-          if size.nil?
-            start = start.to_i
-            advance = eend == "END" ? 0 : eend.to_i - start.to_i + 1
-            eend = eend == "END" ? Float::INFINITY : eend.to_i
-
-            inverse = eend < start
-            if inverse
-              size = start - eend + 1
-            else
-              size = eend - start + 1
-            end
-          end
-
-          pre_final_size = pre_size
-          if ! ((pos > pre_final_size) && (pos <= pre_final_size + size))
-            new << segment
-          else
-            last_pre_size = pre_final_size
-
-            if segment.start_with?("(")
-              offset = pos - (pre_final_size + 1)
-              raise "One mutations breaks segment boundary #{mutation} #{segment} #{offset}: #{current}" if offset < 0
-
-              if ! inverse
-                new << "(" + [source_chr, start, start + offset - mutation_substitutes ] * "," + ")" if offset > 0
-                new << [clean_alt, mutation_substitutes] * "_"
-                new << "(" + [source_chr, start + offset + 1, eend] * "," + ")" if eend >= start + offset + 1
-              else
-                new << "(" + [source_chr, start, start - offset + 1] * "," + ")" if offset > 0
-                new << [clean_alt, mutation_substitutes] * "_"
-                new << "(" + [source_chr, start - offset - mutation_substitutes, eend] * "," + ")" if eend <= start - offset - 1
-              end
-
-            elsif segment.include?("-")
-              offset = pos - pre_final_size - 1
-
-              new << [start, start + offset - mutation_substitutes] * "-" if offset >= mutation_substitutes
-              new << [clean_alt, mutation_substitutes] * "_"
-              if eend == Float::INFINITY
-                new << [start + offset+1, "END"] * "-"
-              else
-                new << [start + offset+1, eend] * "-" if eend >= start + offset + 1
-              end
-            else
-              offset = pos - pre_final_size - 1
-
-              new_change = ""
-              new_change << change[0..offset-2]
-              new_change << clean_alt
-              new_change << change[offset+1..-2]
-
-              segment_substitues += mutation_substitutes - 1
-
-              new << [new_change, segment_substitues] * "_"
-
-            end
-          end
-
-          pre_size += advance
+        last_offset = 0
+        i_start = chr_last_hit[chr] || 0
+        i_start = 0 if i_start < 0
+        i_end = current.length - 1
+        hits = []
+        segment_offsets = []
+        (i_start..i_end).each do |i|
+          segment = current[i]
+          source_chr, start, eend, inverse, size, advance, change, segment_substitues = segment_info segment
+          offset = last_offset
+          last_offset += advance
+          hits << i if pos > offset && pos <= offset + size
+          segment_offsets[i] = [offset, size]
+          i += 1
         end
-        new = new.compact.reject{|s| s.empty? }
+
+        new = current.dup
+
+        hits.reverse.each do |i|
+          offset = segment_offsets[i].first
+          broken = break_segment current[i], mutation, pos, clean_alt, mutation_substitutes, offset
+          new[i,1] = broken
+        end
+
+        chr_last_hit[chr] = hits.sort.first - 1
         clone_segments[chr] = new
       end
 
