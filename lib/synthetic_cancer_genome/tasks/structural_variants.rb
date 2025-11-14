@@ -1,11 +1,11 @@
 require 'synthetic_cancer_genome/structural_variants'
 
 module SyntheticCancerGenome
-  input :reference, :path, "Reference file", nil, :nofile => true
+  input :reference, :path, "Reference file", nil
   input :SVs, :path, "SVs to apply to reference", nil, :noload => true
   extension 'fa.gz'
   task :SV_reference => :binary do |reference,svs|
-    reference = reference.find if Path === reference
+    reference = Open.find reference
     CMD.cmd(:bgzip, "> #{self.tmp_path}", :in => SyntheticCancerGenome.apply_SVs_reference(reference, SyntheticCancerGenome.place_SVs(svs)))
     nil
   end

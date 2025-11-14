@@ -3,8 +3,7 @@ require_relative 'clonality'
 
 module SyntheticCancerGenome
 
-  input :reference, :file, 'Reference file'
-  dep :clonal_tumor, :target_depth => 60, reference: :reference
+  dep :clonal_tumor, :target_depth => 60
   dep :normal, :depth => 30 do |jobname,options|
     {:inputs => options, :jobname => jobname + "-normal" }
   end
